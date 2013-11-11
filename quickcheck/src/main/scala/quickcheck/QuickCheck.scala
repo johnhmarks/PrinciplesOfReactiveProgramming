@@ -29,6 +29,18 @@ abstract class QuickCheckHeap extends Properties("Heap") with IntHeap {
     isEmpty(h)
   }
 
+  /*
+  property("finding and deleting minima is ordered") = forAll { (h: H) =>
+
+  }
+  */
+
+  property("minimum of melded heaps should be minimum of both inputs") = forAll { (l: H, r: H) =>
+    val melded = meld(l, r)
+    val minimum = (findMin(l) min findMin(r))
+    findMin(melded) == minimum
+  }
+
   lazy val genHeap: Gen[H] = for {
     v <- arbitrary[Int]
     h <- oneOf(value(empty), genHeap)
