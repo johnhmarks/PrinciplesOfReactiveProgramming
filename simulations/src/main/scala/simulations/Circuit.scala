@@ -1,7 +1,5 @@
 package simulations
 
-import common._
-
 class Wire {
   private var sigVal = false
   private var actions: List[Simulator#Action] = List()
@@ -59,17 +57,47 @@ abstract class CircuitSimulator extends Simulator {
   //
 
   def orGate(a1: Wire, a2: Wire, output: Wire) {
-    ???
+    def orAction() {
+      val a1Sig = a1.getSignal
+      val a2Sig = a2.getSignal
+      afterDelay(OrGateDelay) { output.setSignal(a1Sig | a2Sig)}
+    }
+    a1 addAction orAction
+    a2 addAction orAction
   }
   
   def orGate2(a1: Wire, a2: Wire, output: Wire) {
-    ???
+    val c, d, e = new Wire
+    inverter(a1, c)
+    inverter(a2, d)
+    andGate(c, d, e)
+    inverter(e, output)
   }
 
   def demux(in: Wire, c: List[Wire], out: List[Wire]) {
-    ???
+    c match {
+      case Nil => andGate(in, in, out(0))
+      /*
+      case h :: Nil => {
+        val notC = new Wire
+        val d0 = out(0)
+        val d1 = out(1)
+        inverter(h, notC)
+        andGate(in, notC, d0)
+        andGate(in, h, d1)
+      }
+      */
+      case h :: t => {
+        val notC, a0, a1 = new Wire
+        inverter(h, notC)
+        andGate(in, notC, a0)
+        andGate(in, h, a1)
+        val (out0, out1) = out.splitAt(out.length / 2)
+        demux(a0, t, out0)
+        demux(a1, t, out1)
+      }
+    }
   }
-
 }
 
 object Circuit extends CircuitSimulator {
@@ -94,12 +122,83 @@ object Circuit extends CircuitSimulator {
     run
   }
 
-  //
-  // to complete with orGateExample and demuxExample...
-  //
+  def orGateExample {
+    val in1, in2, out = new Wire
+    orGate(in1, in2, out)
+    probe("in1", in1)
+    probe("in2", in2)
+    probe("out", out)
+    in1.setSignal(false)
+    in2.setSignal(false)
+    run
+
+    in1.setSignal(true)
+    run
+
+    in2.setSignal(true)
+    run
+
+    in1.setSignal(false)
+    run
+  }
+
+  def orGate2Example {
+    val in1, in2, out = new Wire
+    orGate2(in1, in2, out)
+    probe("in1", in1)
+    probe("in2", in2)
+    probe("out", out)
+    in1.setSignal(false)
+    in2.setSignal(false)
+    run
+
+    in1.setSignal(true)
+    run
+
+    in2.setSignal(true)
+    run
+
+    in1.setSignal(false)
+    run
+  }
+
+  def demuxZeroExample {
+    val in, out = new Wire
+    demux(in, List(), List(out))
+
+    in.setSignal(false)
+    run
+
+    in.setSignal(true)
+    run
+  }
+
+  def demuxOneExample {
+    val in, c, out1, out2 = new Wire
+    demux(in, List(c), List(out1, out2))
+
+    in.setSignal(false)
+    c.setSignal(false)
+    run
+
+    in.setSignal(false)
+    c.setSignal(true)
+    run
+
+    in.setSignal(true)
+    c.setSignal(false)
+    run
+
+    in.setSignal(true)
+    c.setSignal(true)
+    run
+  }
 }
 
 object CircuitMain extends App {
-  // You can write tests either here, or better in the test class CircuitSuite.
   Circuit.andGateExample
+  Circuit.orGateExample
+  Circuit.orGate2Example
+  Circuit.demuxZeroExample
+  Circuit.demuxOneExample
 }
