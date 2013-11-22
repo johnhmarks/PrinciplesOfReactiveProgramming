@@ -33,7 +33,7 @@ class EpidemySimulator extends Simulator {
 
   val persons: List[Person] = (0 until population).map(new Person(_)).toList
 
-  for (i <- 0 until population * prevalenceRate / 100) persons(i).infected = true
+  for (i <- 0 until population * prevalenceRate / 100) persons(i).becomeInfected
 
   class Person (val id: Int) {
     var infected = false
@@ -80,18 +80,24 @@ class EpidemySimulator extends Simulator {
       if (!immune) {
         val transmitted = P(transmissibilityRate)
         if (transmitted) {
-          infected = true
-          afterDelay(incubationDays) {
-            sick = true
-            afterDelay(mortalityDays) {
-              val dies = P(mortalityRate)
-              if (dies) {
-                dead = true
-              } else {
-                afterDelay(immunityDays) {
-                  sick = false
-                  immune = true
-                }
+          becomeInfected
+        }
+      }
+    }
+
+    def becomeInfected {
+      infected = true
+      afterDelay(incubationDays) {
+        sick = true
+        afterDelay(mortalityDays) {
+          val dies = P(mortalityRate)
+          if (dies) {
+            dead = true
+          } else {
+            afterDelay(immunityDays) {
+              if (!dead) {
+                sick = false
+                immune = true
               }
             }
           }
