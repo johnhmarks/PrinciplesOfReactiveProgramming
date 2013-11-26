@@ -47,6 +47,7 @@ package object nodescala {
       val promise = Promise[T]
       for (f <- fs) f.onComplete {
         case Success(t) => promise.trySuccess(t)
+        case _ => {}
       }
       promise.future
     }
