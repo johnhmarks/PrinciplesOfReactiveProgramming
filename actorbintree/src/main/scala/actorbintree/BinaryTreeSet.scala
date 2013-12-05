@@ -176,10 +176,10 @@ class BinaryTreeNode(val elem: Int, initiallyRemoved: Boolean) extends Actor {
       val children = subtrees.values.toSet
       for (child <- children)
         child ! copyTo
-      if (!removed || !children.isEmpty)
-        context.become(copying(subtrees.values.toSet, removed))
-      else
+      if (removed && children.isEmpty)
         context.parent ! CopyFinished
+      else
+        context.become(copying(children, removed))
     }
   }
 
